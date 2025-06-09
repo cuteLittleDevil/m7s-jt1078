@@ -1,11 +1,14 @@
 <h2> 默认页面 </h2>
 
 ```
+默认首页 目前ip换101.35.2.3可以访问
+http://127.0.0.1:12079
+https://127.0.0.1:12080
 默认查看流页面
 http://127.0.0.1:12079/preview
 https://127.0.0.1:12080/preview
 默认模拟流地址 默认只使用flv和mp4的插件
-需要增加其他格式的话 在代码里面初始化修改
+需要增加其他格式的话 在代码里面初始化修改 格式如下
 实时
 http://127.0.0.1:12079/mp4/live/jt1078-295696659617-1.mp4
 https://127.0.0.1:12080/mp4/live/jt1078-295696659617-1.mp4
@@ -27,7 +30,7 @@ docker pull cdcddcdc/m7s-jt1078:latest
 - 回放视频流: 12052
 
 ```
-docker run -d \
+docker run -it -d \
 -v /home/m7s-jt1078/config.yaml:/app/config.yaml \
 --network host \
 cdcddcdc/m7s-jt1078:latest
@@ -44,7 +47,7 @@ cdcddcdc/m7s-jt1078:latest
 - 音频端口组: [12021-12050]
 
 ```
-docker run -d \
+docker run -it -d \
 -v /home/m7s-jt1078/go-jt808.online.crt:/app/go-jt808.online.crt \
 -v /home/m7s-jt1078/go-jt808.online.key:/app/go-jt808.online.key \
 -v /home/m7s-jt1078/config.yaml:/app/config.yaml \
@@ -83,9 +86,9 @@ jt1078:
 
   simulations:
     # jt1078文件 默认循环发送
-      - name: ../testdata/data.txt
+      - name: ./data.txt
         addr: 127.0.0.1:12051 # 模拟实时
-      - name: ../testdata/audio_data.txt
+      - name: ./audio_data.txt
         addr: 127.0.0.1:12052 # 模拟回放
 
 ```

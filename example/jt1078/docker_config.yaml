@@ -1,9 +1,9 @@
 global:
   http:
     listen_addr: ":12079"
-#    listen_addr_tls: ":12080" # 用于HTTPS方式访问API的端口配置
-#    cert_file: "go-jt808.online.crt"
-#    key_file: "go-jt808.online.key"
+  #    listen_addr_tls: ":12080" # 用于HTTPS方式访问API的端口配置
+  #    cert_file: "go-jt808.online.crt"
+  #    key_file: "go-jt808.online.key"
   tcp:
     listen_addr: ":12081"
 
@@ -34,9 +34,9 @@ jt1078:
 
   simulations:
     # jt1078文件 默认循环发送
-    - name: ../testdata/data.txt
+    - name: ./data.txt
       addr: 127.0.0.1:12051 # 模拟实时
-    - name: ../testdata/audio_data.txt
+    - name: ./audio_data.txt
       addr: 127.0.0.1:12052 # 模拟回放
 
 mp4:
