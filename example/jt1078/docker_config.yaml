@@ -1,4 +1,6 @@
 global:
+  publish:
+    publish_timeout: 30s  # 将无数据超时改为30秒
   http:
     listen_addr: ":12079"
   #    listen_addr_tls: ":12080" # 用于HTTPS方式访问API的端口配置
@@ -25,12 +27,14 @@ jt1078:
     on_join_url: "https://127.0.0.1:12000/api/v1/jt808/event/real-time-join"
     on_leave_url: "https://127.0.0.1:12000/api/v1/jt808/event/real-time-leave"
     prefix: "live/jt1078" # 默认自定义前缀-手机号-通道 如：live/jt1078-295696659617-1
+    overtime_second: 0 # 无人订阅的情况 多久就关闭这个链接（小于等于0则不启用 默认0 推荐还是使用9102指令去触发关闭)
 
   playback: # 回放视频
     addr: '0.0.0.0:12052'
     on_join_url: "https://127.0.0.1:12000/api/v1/play-back-join"
     on_leave_url: "https://127.0.0.1:12000/api/v1/play-back-leave"
     prefix: "live/jt1079" # 默认自定义前缀-手机号-通道 如：live/jt1079-295696659617-1
+    overtime_second: 0 # 无人订阅的情况 多久就关闭这个链接（小于等于0则不启用 默认0 推荐还是使用9102指令去触发关闭)
 
   simulations:
     # jt1078文件 默认循环发送
