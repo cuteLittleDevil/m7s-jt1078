@@ -19,6 +19,7 @@ type Options struct {
 	onJoinURL      string
 	onLeaveURL     string
 	onAudioJoinURL string
+	overTime       time.Duration
 }
 
 func WithPubFunc(pubFunc func(ctx context.Context,
@@ -38,6 +39,12 @@ func WithURL(onJoinURL, onLeaveURL string) Option {
 func WithPTSFunc(ptsFunc func(pack *jt1078.Packet) time.Duration) Option {
 	return Option{F: func(o *Options) {
 		o.ptsFunc = ptsFunc
+	}}
+}
+
+func WithOverTime(duration time.Duration) Option {
+	return Option{F: func(o *Options) {
+		o.overTime = duration
 	}}
 }
 

@@ -49,10 +49,11 @@ type (
 	}
 
 	jt1078Stream struct {
-		Addr       string `default:"0.0.0.0:1078" desc:"视频端口"`
-		OnJoinURL  string `default:"http://127.0.0.1:10011/api/v1/join" desc:"第一个包正确解析时触发"`
-		OnLeaveURL string `default:"http://127.0.0.1:10011/api/v1/leave" desc:"推流客户端离开时"`
-		Prefix     string `default:"live/jt1078" desc:"推流前缀"`
+		Addr           string `default:"0.0.0.0:1078" desc:"视频端口"`
+		OnJoinURL      string `default:"http://127.0.0.1:10011/api/v1/join" desc:"第一个包正确解析时触发"`
+		OnLeaveURL     string `default:"http://127.0.0.1:10011/api/v1/leave" desc:"推流客户端离开时"`
+		Prefix         string `default:"live/jt1078" desc:"推流前缀"`
+		OverTimeSecond int    `default:"0" desc:"无人订阅的情况 多久就关闭这个链接（小于等于0则不启用 默认0 推荐还是使用9102指令去触发关闭)"`
 	}
 
 	jt1078Simulations struct {
@@ -62,30 +63,30 @@ type (
 )
 
 func (j *JT1078Plugin) OnInit() (err error) {
-	if j.RealTime.Addr != "" {
-		if j.Intercom.Enable {
-			j.sessions = pkg.NewAudioManager(j.Logger, j.Intercom.AudioPorts,
-				func(am *pkg.AudioManager) {
-					am.OnJoinURL = j.Intercom.OnJoinURL
-					am.OnLeaveURL = j.Intercom.OnLeaveURL
-					if j.Intercom.OverTimeSecond <= 0 {
-						j.Intercom.OverTimeSecond = 600
-					}
-					am.OverTime = time.Duration(j.Intercom.OverTimeSecond) * time.Second
-				})
-			j.Info("audio init",
-				slog.Any("ports", j.Intercom.AudioPorts),
-				slog.Int("overTime", j.Intercom.OverTimeSecond),
-				slog.String("join", j.Intercom.OnJoinURL),
-				slog.String("leave", j.Intercom.OnLeaveURL))
-			if err := j.sessions.Init(); err != nil {
-				j.Error("init error",
-					slog.String("err", err.Error()))
-				return err
-			}
-			go j.sessions.Run()
+	if j.Intercom.Enable {
+		j.sessions = pkg.NewAudioManager(j.Logger, j.Intercom.AudioPorts,
+			func(am *pkg.AudioManager) {
+				am.OnJoinURL = j.Intercom.OnJoinURL
+				am.OnLeaveURL = j.Intercom.OnLeaveURL
+				if j.Intercom.OverTimeSecond <= 0 {
+					j.Intercom.OverTimeSecond = 600
+				}
+				am.OverTime = time.Duration(j.Intercom.OverTimeSecond) * time.Second
+			})
+		j.Info("audio init",
+			slog.Any("ports", j.Intercom.AudioPorts),
+			slog.Int("overTime", j.Intercom.OverTimeSecond),
+			slog.String("join", j.Intercom.OnJoinURL),
+			slog.String("leave", j.Intercom.OnLeaveURL))
+		if err := j.sessions.Init(); err != nil {
+			j.Error("init error",
+				slog.String("err", err.Error()))
+			return err
 		}
+		go j.sessions.Run()
+	}
 
+	if j.RealTime.Addr != "" {
 		service := pkg.NewService(j.RealTime.Addr, j.Logger,
 			pkg.WithURL(j.RealTime.OnJoinURL, j.RealTime.OnLeaveURL),
 			pkg.WithPubFunc(func(ctx context.Context, pack *jt1078.Packet) (publisher *m7s.Publisher, err error) {
@@ -108,9 +109,11 @@ func (j *JT1078Plugin) OnInit() (err error) {
 			pkg.WithPTSFunc(func(_ *jt1078.Packet) time.Duration {
 				return time.Duration(time.Now().UnixMilli()) * 90 // 实时视频使用本机时间戳
 			}),
+			pkg.WithOverTime(time.Duration(j.RealTime.OverTimeSecond)*time.Second),
 		)
 		go service.Run()
 	}
+
 	if j.Playback.Addr != "" {
 		service := pkg.NewService(j.Playback.Addr, j.Logger,
 			pkg.WithURL(j.Playback.OnJoinURL, j.Playback.OnLeaveURL),
@@ -125,9 +128,11 @@ func (j *JT1078Plugin) OnInit() (err error) {
 			pkg.WithPTSFunc(func(pack *jt1078.Packet) time.Duration {
 				return time.Duration(pack.Timestamp) * 90 // 录像回放使用设备的
 			}),
+			pkg.WithOverTime(time.Duration(j.Playback.OverTimeSecond)*time.Second),
 		)
 		go service.Run()
 	}
+
 	if len(j.Simulations) > 0 {
 		params := make([]any, 0, len(j.Simulations))
 		for _, v := range j.Simulations {
@@ -313,7 +318,7 @@ func (j *JT1078Plugin) RegisterHandler() map[string]http.HandlerFunc {
 }
 
 func (j *JT1078Plugin) simulationPull() {
-	time.Sleep(1 * time.Second) // 等待jt1078服务都启动好
+	time.Sleep(3 * time.Second) // 等待jt1078服务都启动好
 	for _, v := range j.Simulations {
 		go func(name string, addr string) {
 			j.Warn("simulation pull",

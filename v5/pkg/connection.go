@@ -1,7 +1,9 @@
 package pkg
 
 import (
+	"context"
 	"errors"
+	"fmt"
 	"github.com/cuteLittleDevil/go-jt808/protocol/jt1078"
 	_ "github.com/go-resty/resty/v2"
 	"io"
@@ -34,47 +36,68 @@ func newConnection(c net.Conn, log *slog.Logger, ptsFunc func(pack *jt1078.Packe
 	}
 }
 
-func (c *connection) run() error {
+func (c *connection) run(ctx context.Context, waitSubscriberOverTime time.Duration) error {
 	var (
-		data      = make([]byte, 10*1024)
-		packParse = newPackageParse()
-		once      sync.Once
-		onJoinErr error
-		writeErr  error
+		data             = make([]byte, 10*1024)
+		packParse        = newPackageParse()
+		once             sync.Once
+		onJoinErr        error
+		handleErr        error
+		ticker           = time.NewTicker(time.Second)
+		firstWaitSubTime time.Time
 	)
 	defer func() {
 		packParse.clear()
+		ticker.Stop()
 		clear(data)
 		c.stop()
 	}()
+
 	for {
-		if n, err := c.conn.Read(data); err != nil {
-			if errors.Is(err, net.ErrClosed) || errors.Is(err, io.EOF) {
-				return nil
-			}
-			return err
-		} else if n > 0 {
-			for pack, err := range packParse.parse(data[:n]) {
-				if err == nil {
-					once.Do(func() {
-						onJoinErr = c.onJoinEvent(c, pack)
-					})
-					if onJoinErr == nil {
-						if err := c.handle(pack); err != nil {
-							writeErr = err
-						}
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-ticker.C:
+			if c.publisher != nil && waitSubscriberOverTime > 0 {
+				if c.publisher.State == m7s.PublisherStateWaitSubscriber {
+					if firstWaitSubTime.IsZero() {
+						firstWaitSubTime = time.Now()
+					} else if time.Since(firstWaitSubTime) > waitSubscriberOverTime {
+						return fmt.Errorf("wait subscriber over time %s", waitSubscriberOverTime.String())
 					}
-				} else if errors.Is(err, jt1078.ErrBodyLength2Short) || errors.Is(err, jt1078.ErrHeaderLength2Short) {
-					// 数据长度不够的 忽略
 				} else {
-					return err
+					firstWaitSubTime = time.Time{}
 				}
 			}
-			if onJoinErr != nil {
-				return onJoinErr
-			}
-			if writeErr != nil {
-				return writeErr
+		default:
+			if n, err := c.conn.Read(data); err != nil {
+				if errors.Is(err, net.ErrClosed) || errors.Is(err, io.EOF) {
+					return nil
+				}
+				return err
+			} else if n > 0 {
+				for pack, err := range packParse.parse(data[:n]) {
+					if err == nil {
+						once.Do(func() {
+							onJoinErr = c.onJoinEvent(c, pack)
+						})
+						if onJoinErr == nil {
+							if err := c.handle(pack); err != nil {
+								handleErr = err
+							}
+						}
+					} else if errors.Is(err, jt1078.ErrBodyLength2Short) || errors.Is(err, jt1078.ErrHeaderLength2Short) {
+						// 数据长度不够的 忽略
+					} else {
+						return err
+					}
+				}
+				if onJoinErr != nil {
+					return onJoinErr
+				}
+				if handleErr != nil {
+					return handleErr
+				}
 			}
 		}
 	}
