@@ -7,9 +7,8 @@ FROM alpine:latest
 WORKDIR /app
 RUN apk add --no-cache ca-certificates && update-ca-certificates
 # github action中curl下载的
-COPY --from=builder /app/example/jt1078/ /tmp/
-RUN if [ -f /tmp/admin.zip ]; then cp /tmp/admin.zip .; fi
-
+COPY --from=builder /app/example/jt1078/admin.zip /tmp/
+RUN if [ -f /tmp/admin.zip ]; then cp /tmp/admin.zip . && rm -rf /tmp/*; fi
 COPY --from=builder /app/example/testdata/data.txt .
 COPY --from=builder /app/example/testdata/audio_data.txt .
 COPY --from=builder /app/example/jt1078/jt1078 .
