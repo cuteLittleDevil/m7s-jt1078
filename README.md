@@ -4,10 +4,11 @@
 ![Release](https://github.com/cuteLittleDevil/m7s-jt1078/actions/workflows/mac.yml/badge.svg)
 ![Release](https://github.com/cuteLittleDevil/m7s-jt1078/actions/workflows/win.yml/badge.svg)
 ![Release](https://github.com/cuteLittleDevil/m7s-jt1078/actions/workflows/ubuntu.yml/badge.svg)
+[![Docker Image Size](https://img.shields.io/docker/image-size/cdcddcdc/m7s-jt1078/latest)](https://hub.docker.com/r/cdcddcdc/m7s-jt1078)
 
 <h1 id="m7s"> m7s-jt1078 </h1>
 
-
+- [m7s官方地址](https://monibuca.com)
 
 | 例子 |  测试页面  | 代码 |
 |----------|-----|-------------------|
@@ -17,14 +18,13 @@
 
 ---
 
-- [m7s官方地址](https://monibuca.com)
-- [仅使用jt1078详情](./example/jt1078)
+- 在线测试 http://101.35.2.3:10001 [仅使用jt1078详情](./example/jt1078)
 
 ```
 docker pull cdcddcdc/m7s-jt1078:latest
 ```
 
-1. 音视频启动
+1. 音视频启动 [参考配置](./example/jt1078/docker_video_config.yaml)
 ```
 docker run -d \
 -v /home/m7s-jt1078/config.yaml:/app/config.yaml \
@@ -183,6 +183,8 @@ Content-Type: application/json
 
 <h2> 配置说明 </h2>
 
+- 下面配置增加到原有m7s配置 [完整配置参考](./example/jt1078/config.yaml)
+
 ``` yaml
 jt1078:
   enable: true # 是否启用
@@ -211,11 +213,11 @@ jt1078:
     prefix: "live/jt1079" # 默认自定义前缀-手机号-通道 如：live/jt1079-295696659617-1
     overtime_second: 0 # 无人订阅的情况 多久就关闭这个链接（小于等于0则不启用 默认0 推荐还是使用9102指令去触发关闭)
 
-simulations:
+  simulations:
     # jt1078文件 默认循环发送
-      - name: ../testdata/data.txt
-        addr: 127.0.0.1:12051 # 模拟实时
-      - name: ../testdata/audio_data.txt
-        addr: 127.0.0.1:12052 # 模拟回放
+    - name: ./data.txt
+      addr: 127.0.0.1:12051 # 模拟实时
+    - name: ./audio_data.txt
+      addr: 127.0.0.1:12052 # 模拟回放
 
 ```
