@@ -30,7 +30,7 @@ docker run -d \
 cdcddcdc/m7s-jt1078:latest
 ```
 
-2. 增加对讲功能
+2. 增加对讲功能 [参考配置](./example/jt1078/docker_intercom_config.yaml)
 ```
 docker run -d \
 -v /home/m7s-jt1078/go-jt808.online.crt:/app/go-jt808.online.crt \

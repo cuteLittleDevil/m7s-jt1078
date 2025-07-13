@@ -3,7 +3,7 @@ module jt1078
 go 1.23.8
 
 require (
-	github.com/cuteLittleDevil/m7s-jt1078/v5 v5.8.0
+	github.com/cuteLittleDevil/m7s-jt1078/v5 v5.8.1
 	m7s.live/v5 v5.0.3
 )
 
@@ -18,7 +18,6 @@ require (
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/deepch/vdk v0.0.27 // indirect
 	github.com/go-ole/go-ole v1.3.0 // indirect
-	github.com/go-resty/resty/v2 v2.16.5 // indirect
 	github.com/go-sql-driver/mysql v1.7.0 // indirect
 	github.com/go-task/slim-sprig v0.0.0-20230315185526-52ccab3ef572 // indirect
 	github.com/gobwas/httphead v0.1.0 // indirect

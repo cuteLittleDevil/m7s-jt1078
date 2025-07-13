@@ -3,9 +3,9 @@ global:
     publish_timeout: 30s  # 将无数据超时改为30秒
   http:
     listen_addr: ":10001"
-  #    listen_addr_tls: ":10003" # 用于HTTPS方式访问API的端口配置
-  #    cert_file: "go-jt808.online.crt"
-  #    key_file: "go-jt808.online.key"
+    listen_addr_tls: ":10003" # 用于HTTPS方式访问API的端口配置
+    cert_file: "go-jt808.online.crt"
+    key_file: "go-jt808.online.key"
   tcp:
     listen_addr: ":10002"
 
@@ -20,7 +20,7 @@ jt1078:
   enable: true
 
   intercom:
-    enable: false # 是否启用 用于双向对讲
+    enable: true # 是否启用 用于双向对讲
     jt1078webrtc:
       port: 10010 # 对讲默认udp端口
       ip: "101.35.2.3" # 外网ip 用于SDP协商修改
