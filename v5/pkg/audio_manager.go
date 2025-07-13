@@ -62,7 +62,7 @@ func (am *AudioManager) Init() error {
 							"address":   conn.RemoteAddr().String(),
 							"startTime": time.Now().Format(time.DateTime),
 						}
-						go onNoticeEvent(am.OnJoinURL, record)
+						onNoticeEvent(am.OnJoinURL, record)
 
 						// 2. 处理设备读写
 						client := newDevice(conn, writeChan, am.OverTime)

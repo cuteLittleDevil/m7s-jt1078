@@ -66,13 +66,15 @@ func (s *Service) Run() {
 				"streamPath": c.publisher.StreamPath,
 				"sim":        pack.Sim,
 				"channel":    pack.LogicChannel,
+				"startTime":  time.Now().Format(time.DateTime),
 			}
-			go onNoticeEvent(s.opts.onJoinURL, httpBody)
+			onNoticeEvent(s.opts.onJoinURL, httpBody)
 			return nil
 		}
 		client.onLeaveEvent = func() {
 			if len(httpBody) > 0 {
-				go onNoticeEvent(s.opts.onLeaveURL, httpBody)
+				httpBody["endTime"] = time.Now().Format(time.DateTime)
+				onNoticeEvent(s.opts.onLeaveURL, httpBody)
 			}
 			cancel()
 		}

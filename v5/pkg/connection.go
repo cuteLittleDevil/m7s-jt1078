@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/cuteLittleDevil/go-jt808/protocol/jt1078"
-	_ "github.com/go-resty/resty/v2"
 	"io"
 	"log/slog"
 	"m7s.live/v5"
