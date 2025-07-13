@@ -60,6 +60,7 @@ func onEventRealTimeJoin(c *gin.Context) {
 		StreamPath string `json:"streamPath"`
 		Sim        string `json:"sim"`
 		Channel    int    `json:"channel"`
+		StartTime  string `json:"startTime"`
 	}
 	var req Request
 	if err := c.BindJSON(&req); err != nil {
@@ -83,6 +84,8 @@ func onEventRealTimeLeave(c *gin.Context) {
 		StreamPath string `json:"streamPath"`
 		Sim        string `json:"sim"`
 		Channel    int    `json:"channel"`
+		StartTime  string `json:"startTime"`
+		EndTime    string `json:"endTime"`
 	}
 	var req Request
 	if err := c.BindJSON(&req); err != nil {

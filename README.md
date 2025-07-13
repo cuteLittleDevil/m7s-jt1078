@@ -1,8 +1,6 @@
 ![MIT License](https://img.shields.io/github/license/cuteLittleDevil/m7s-jt1078)
 [![Go Report Card](https://goreportcard.com/badge/github.com/cuteLittleDevil/m7s-jt1078/v5)](https://goreportcard.com/report/github.com/cuteLittleDevil/m7s-jt1078/v5)
 ![Latest Release](https://img.shields.io/github/v/release/cuteLittleDevil/m7s-jt1078)
-![Release](https://github.com/cuteLittleDevil/m7s-jt1078/actions/workflows/mac.yml/badge.svg)
-![Release](https://github.com/cuteLittleDevil/m7s-jt1078/actions/workflows/win.yml/badge.svg)
 ![Release](https://github.com/cuteLittleDevil/m7s-jt1078/actions/workflows/ubuntu.yml/badge.svg)
 [![Docker Image Size](https://img.shields.io/docker/image-size/cdcddcdc/m7s-jt1078/latest)](https://hub.docker.com/r/cdcddcdc/m7s-jt1078)
 

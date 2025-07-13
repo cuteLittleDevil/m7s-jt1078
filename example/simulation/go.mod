@@ -3,8 +3,8 @@ module simulation
 go 1.23.8
 
 require (
-	github.com/cuteLittleDevil/m7s-jt1078/v5 v5.8.0
-	m7s.live/v5 v5.0.2
+	github.com/cuteLittleDevil/m7s-jt1078/v5 v5.8.1
+	m7s.live/v5 v5.0.3
 )
 
 require (
@@ -18,7 +18,6 @@ require (
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/deepch/vdk v0.0.27 // indirect
 	github.com/go-ole/go-ole v1.3.0 // indirect
-	github.com/go-resty/resty/v2 v2.16.5 // indirect
 	github.com/go-sql-driver/mysql v1.7.0 // indirect
 	github.com/go-task/slim-sprig v0.0.0-20230315185526-52ccab3ef572 // indirect
 	github.com/gobwas/httphead v0.1.0 // indirect
@@ -102,5 +101,5 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gorm.io/driver/mysql v1.5.7 // indirect
 	gorm.io/driver/postgres v1.5.9 // indirect
-	gorm.io/gorm v1.25.11 // indirect
+	gorm.io/gorm v1.30.0 // indirect
 )
