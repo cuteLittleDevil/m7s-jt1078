@@ -1,7 +1,10 @@
 global:
   publish:
     publish_timeout: 30s  # 将无数据超时改为30秒
-
+    idle_timeout: 60s # 空闲(无订阅)超时
+  db: # 这个jt1078不用db也可以的 只是默认页面会报错而已
+    db_type: sqlite # 数据库类型
+    dsn: m7s.db # 数据库文件路径
   http:
     listen_addr: ":12079"
     listen_addr_tls: ":12080" # 用于HTTPS方式访问API的端口配置
@@ -46,9 +49,3 @@ jt1078:
 
 mp4:
   enable: true
-
-hls:
-  enable: true
-  onpub:
-    transform:
-      .* : 5s x 3

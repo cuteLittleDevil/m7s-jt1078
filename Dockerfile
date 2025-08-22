@@ -1,7 +1,8 @@
 FROM golang:1.23-alpine AS builder
 WORKDIR /app
 COPY . .
-RUN cd ./example/jt1078 &&  go build -o jt1078
+# 不用数据库也可以跑 只是默认页面会报错 https://github.com/cuteLittleDevil/m7s-jt1078/issues/4
+RUN cd ./example/jt1078 &&   go build -tags sqlite -o jt1078
 
 FROM alpine:latest
 WORKDIR /app
