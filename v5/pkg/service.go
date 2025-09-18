@@ -51,7 +51,7 @@ func (s *Service) Run() {
 				slog.String("err", err.Error()))
 			return
 		}
-		client := newConnection(conn, s.Logger, s.opts.ptsFunc)
+		client := newConnection(conn, s.Logger, s.opts.timestampFunc)
 		var (
 			httpBody = map[string]any{}
 		)

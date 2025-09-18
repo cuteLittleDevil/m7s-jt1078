@@ -1,6 +1,7 @@
 package v5
 
 import (
+	_ "embed"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -22,7 +23,10 @@ import (
 	"time"
 )
 
-var _ = m7s.InstallPlugin[JT1078Plugin]()
+var _ = m7s.InstallPlugin[JT1078Plugin](m7s.PluginMeta{
+	Name:    "jt1078",
+	Version: "v5.9.0",
+})
 
 type (
 	JT1078Plugin struct {
@@ -62,7 +66,7 @@ type (
 	}
 )
 
-func (j *JT1078Plugin) OnInit() (err error) {
+func (j *JT1078Plugin) Start() (err error) {
 	if j.Intercom.Enable {
 		j.sessions = pkg.NewAudioManager(j.Logger, j.Intercom.AudioPorts,
 			func(am *pkg.AudioManager) {
@@ -106,8 +110,8 @@ func (j *JT1078Plugin) OnInit() (err error) {
 			}),
 			pkg.WithEnableIntercom(j.Intercom.Enable),
 			pkg.WithSessions(j.sessions),
-			pkg.WithPTSFunc(func(_ *jt1078.Packet) time.Duration {
-				return time.Duration(time.Now().UnixMilli()) * 90 // 实时视频使用本机时间戳
+			pkg.WithTimestampFunc(func(_ *jt1078.Packet) time.Duration {
+				return time.Duration(time.Now().UnixMilli()) // 实时视频使用本机时间戳
 			}),
 			pkg.WithOverTime(time.Duration(j.RealTime.OverTimeSecond)*time.Second),
 		)
@@ -125,8 +129,8 @@ func (j *JT1078Plugin) OnInit() (err error) {
 				}, "-")
 				return j.Publish(ctx, streamPath) // 回放唯一
 			}),
-			pkg.WithPTSFunc(func(pack *jt1078.Packet) time.Duration {
-				return time.Duration(pack.Timestamp) * 90 // 录像回放使用设备的
+			pkg.WithTimestampFunc(func(pack *jt1078.Packet) time.Duration {
+				return time.Duration(pack.Timestamp) // 录像回放使用设备的
 			}),
 			pkg.WithOverTime(time.Duration(j.Playback.OverTimeSecond)*time.Second),
 		)

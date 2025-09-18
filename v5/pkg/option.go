@@ -13,7 +13,7 @@ type Option struct {
 
 type Options struct {
 	pubFunc        func(ctx context.Context, pack *jt1078.Packet) (publisher *m7s.Publisher, err error)
-	ptsFunc        func(pack *jt1078.Packet) time.Duration
+	timestampFunc  func(pack *jt1078.Packet) time.Duration
 	intercom       bool
 	sessions       *AudioManager
 	onJoinURL      string
@@ -36,9 +36,9 @@ func WithURL(onJoinURL, onLeaveURL string) Option {
 	}}
 }
 
-func WithPTSFunc(ptsFunc func(pack *jt1078.Packet) time.Duration) Option {
+func WithTimestampFunc(timestampFunc func(pack *jt1078.Packet) time.Duration) Option {
 	return Option{F: func(o *Options) {
-		o.ptsFunc = ptsFunc
+		o.timestampFunc = timestampFunc
 	}}
 }
 

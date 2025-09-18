@@ -8,8 +8,10 @@ import (
 	"io"
 	"log/slog"
 	"m7s.live/v5"
-	"m7s.live/v5/pkg"
 	"m7s.live/v5/pkg/codec"
+	"m7s.live/v5/pkg/format"
+	"m7s.live/v5/pkg/task"
+	"m7s.live/v5/pkg/util"
 	"net"
 	"sync"
 	"time"
@@ -18,20 +20,24 @@ import (
 type connection struct {
 	conn net.Conn
 	*slog.Logger
-	stopChan     chan struct{}
-	stopOnce     sync.Once
-	publisher    *m7s.Publisher
-	onJoinEvent  func(c *connection, pack *jt1078.Packet) error
-	onLeaveEvent func()
-	ptsFunc      func(pack *jt1078.Packet) time.Duration
+	stopChan        chan struct{}
+	stopOnce        sync.Once
+	publisher       *m7s.Publisher
+	onJoinEvent     func(c *connection, pack *jt1078.Packet) error
+	onLeaveEvent    func()
+	timestampFunc   func(pack *jt1078.Packet) time.Duration
+	audioWriterOnce sync.Once
+	videoWriterOnce sync.Once
+	audioWriter     *m7s.PublishAudioWriter[*format.Mpeg2Audio]
+	videoWriter     *m7s.PublishVideoWriter[*format.AnnexB]
 }
 
-func newConnection(c net.Conn, log *slog.Logger, ptsFunc func(pack *jt1078.Packet) time.Duration) *connection {
+func newConnection(c net.Conn, log *slog.Logger, timestampFunc func(pack *jt1078.Packet) time.Duration) *connection {
 	return &connection{
-		Logger:   log,
-		conn:     c,
-		stopChan: make(chan struct{}),
-		ptsFunc:  ptsFunc,
+		Logger:        log,
+		conn:          c,
+		stopChan:      make(chan struct{}),
+		timestampFunc: timestampFunc,
 	}
 }
 
@@ -109,72 +115,57 @@ func (c *connection) stop() {
 			_ = c.conn.Close()
 		}
 		c.onLeaveEvent()
+		if c.publisher != nil {
+			c.publisher.Stop(task.ErrTaskComplete)
+		}
 	})
 }
 
 func (c *connection) handle(packet *jt1078.Packet) error {
-	pts := c.ptsFunc(packet)
 	data := packet.Body
-	var (
-		result    pkg.IAVFrame
-		writeFunc func(pkg.IAVFrame) error
-	)
+
 	switch pt := packet.Flag.PT; pt {
 	case jt1078.PTAAC, jt1078.PTG711A, jt1078.PTG711U:
-		result = c.parseAudioPacket(pt, pts, data)
-		writeFunc = c.publisher.WriteAudio
+		c.audioWriterOnce.Do(func() {
+			allocator := util.NewScalableMemoryAllocator(1 << util.MinPowerOf2)
+			c.audioWriter = m7s.NewPublishAudioWriter[*format.Mpeg2Audio](c.publisher, allocator)
+		})
+		writer := c.audioWriter
+		frame := writer.AudioFrame
+		frame.ICodecCtx = &codec.AACCtx{}
+		if pt == jt1078.PTG711A {
+			frame.ICodecCtx = &codec.PCMACtx{}
+		} else if pt == jt1078.PTG711U {
+			frame.ICodecCtx = &codec.PCMUCtx{}
+		}
+		frame.Timestamp = c.timestampFunc(packet)
+		mem := frame.NextN(len(data))
+		copy(mem, data)
+		return writer.NextAudio()
+
 	case jt1078.PTH264, jt1078.PTH265:
-		result = c.parseVideoPacket(pt, pts, data)
-		writeFunc = c.publisher.WriteVideo
+		c.videoWriterOnce.Do(func() {
+			allocator := util.NewScalableMemoryAllocator(1 << util.MinPowerOf2)
+			c.videoWriter = m7s.NewPublishVideoWriter[*format.AnnexB](c.publisher, allocator)
+		})
+		writer := c.videoWriter
+		// 为每帧创建 H26xFrame
+		frame := writer.VideoFrame
+		// 设置正确间隔的时间戳
+		frame.Timestamp = c.timestampFunc(packet)
+		// 写入 NALU 数据
+		nalus := frame.GetNalus()
+		// 假如 frameData 中只有一个 NALU，否则需要循环执行下面的代码
+		p := nalus.GetNextPointer()
+		mem := frame.NextN(len(data))
+		copy(mem, data)
+		p.PushOne(mem)
+		return writer.NextVideo()
+
 	default:
 		c.Warn("unknown pt",
 			slog.Int("pt", int(pt)),
 			slog.String("describe", pt.String()))
 		return nil
 	}
-	if result != nil && writeFunc != nil {
-		if err := writeFunc(result); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (c *connection) parseAudioPacket(pt jt1078.PTType, pts time.Duration, data []byte) pkg.IAVFrame {
-	var result pkg.IAVFrame
-	switch pt {
-	case jt1078.PTAAC:
-		var adts = &pkg.ADTS{
-			DTS: pts,
-		}
-		adts.Memory.AppendOne(data)
-		result = adts
-	case jt1078.PTG711A:
-		rawAudio := &pkg.RawAudio{
-			Timestamp: pts,
-			FourCC:    codec.FourCC_ALAW,
-		}
-		rawAudio.Memory.AppendOne(data)
-		result = rawAudio
-	case jt1078.PTG711U:
-		rawAudio := &pkg.RawAudio{
-			Timestamp: pts,
-			FourCC:    codec.FourCC_ULAW,
-		}
-		rawAudio.Memory.AppendOne(data)
-		result = rawAudio
-	}
-	return result
-}
-
-func (c *connection) parseVideoPacket(pt jt1078.PTType, pts time.Duration, data []byte) pkg.IAVFrame {
-	result := &pkg.AnnexB{
-		PTS: pts,
-		DTS: pts, // 没有b帧的情况是一样的
-	}
-	if pt == jt1078.PTH265 {
-		result.Hevc = true
-	}
-	result.Memory.AppendOne(data)
-	return result
 }

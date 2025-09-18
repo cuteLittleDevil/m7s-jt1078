@@ -24,8 +24,6 @@ type (
 	}
 
 	session struct {
-		// 是否使用
-		use bool
 		// 把音频数据发送给设备
 		audioChan chan<- []byte
 	}
@@ -90,7 +88,6 @@ func (am *AudioManager) Init() error {
 			}
 		}(ch, port)
 		audios[port] = &session{
-			use:       false,
 			audioChan: ch,
 		}
 	}
