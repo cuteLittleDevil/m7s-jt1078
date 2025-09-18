@@ -6,6 +6,11 @@
 
 <h1 id="m7s"> m7s-jt1078 </h1>
 
+| m7s版本 | m7s-jt1078|
+| ------- | ----- |
+| >= 5.1.0   | v5.9.0 |
+| < 5.1.0  | v5.8.1     |
+
 - [m7s官方地址](https://monibuca.com)
 
 | 例子 |  测试页面  | 代码 |
@@ -51,6 +56,9 @@ cdcddcdc/m7s-jt1078:latest
 
 <h3>一、 下发9101指令</h3>
 
+<details>
+  <summary>让设备上传jt1078流到指定端口</summary>
+
 ``` http
 ### 对讲测试 设备连接到服务器端口
 POST https://124.221.30.46:12000/api/v1/jt808/9101
@@ -80,7 +88,12 @@ Content-Type: application/json
 }
 ```
 
+</details>
+
 <h3>二、 下发9003指令</h3>
+
+<details>
+  <summary>查询设备音视频属性</summary>
 
 ``` http
 ### 查询设备音视频属性
@@ -125,7 +138,12 @@ Content-Type: application/json
 }
 ```
 
-<h3>三、 浏览器webrtc下发音频给服务器</h3>
+</details>
+
+<h3>三、 下发音频</h3>
+
+<details>
+  <summary>浏览器webrtc下发音频给服务器</summary>
 
 - SDP格式如下所示 额外增加一个组 把音频下发给这个组的
 
@@ -145,10 +163,15 @@ Content-Type: application/json
 
 - 服务器返回固定的外网IP和端口 ICE沟通可直接使用
 
+</details>
+
 <h3>四、关闭对讲</h3>
 
+<details>
+  <summary>详情</summary>
+
 1. 浏览器端关闭对讲
-2. 下发9102指令 让设备结束对讲
+2. 下发9102指令 让设备结束对讲 （或者配置超时时间自动关闭)
 
 ``` http
 ### 关闭对讲
@@ -178,6 +201,8 @@ Content-Type: application/json
   "err": "over time 47.243093226s"
 }
 ```
+
+</details>
 
 <h2> 配置说明 </h2>
 
