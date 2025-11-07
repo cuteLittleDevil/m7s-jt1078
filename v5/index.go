@@ -58,6 +58,13 @@ type (
 		OnLeaveURL     string `default:"http://127.0.0.1:10011/api/v1/leave" desc:"推流客户端离开时"`
 		Prefix         string `default:"live/jt1078" desc:"推流前缀"`
 		OverTimeSecond int    `default:"0" desc:"无人订阅的情况 多久就关闭这个链接（小于等于0则不启用 默认0 推荐还是使用9102指令去触发关闭)"`
+		Debug          Debug  `default:"{}" desc:"调试配置"`
+	}
+
+	Debug struct {
+		Enable         bool   `default:"false" desc:"是否开启调试"`
+		Dir            string `default:"./" desc:"文件目录"`
+		SaveTimeSecond int    `default:"60" desc:"文件保存时间 单位秒"`
 	}
 
 	jt1078Simulations struct {
@@ -90,12 +97,12 @@ func (j *JT1078Plugin) Start() (err error) {
 		go j.sessions.Run()
 	}
 
-	if j.RealTime.Addr != "" {
-		service := pkg.NewService(j.RealTime.Addr, j.Logger,
-			pkg.WithURL(j.RealTime.OnJoinURL, j.RealTime.OnLeaveURL),
+	if tmp := j.RealTime; tmp.Addr != "" {
+		service := pkg.NewService(tmp.Addr, j.Logger,
+			pkg.WithURL(tmp.OnJoinURL, tmp.OnLeaveURL),
 			pkg.WithPubFunc(func(ctx context.Context, pack *jt1078.Packet) (publisher *m7s.Publisher, err error) {
 				streamPath := strings.Join([]string{
-					j.RealTime.Prefix,
+					tmp.Prefix,
 					pack.Sim,
 					fmt.Sprintf("%d", pack.LogicChannel),
 				}, "-")
@@ -113,17 +120,18 @@ func (j *JT1078Plugin) Start() (err error) {
 			pkg.WithTimestampFunc(func(_ *jt1078.Packet) time.Duration {
 				return time.Duration(time.Now().UnixMilli()) // 实时视频使用本机时间戳
 			}),
-			pkg.WithOverTime(time.Duration(j.RealTime.OverTimeSecond)*time.Second),
+			pkg.WithOverTime(time.Duration(tmp.OverTimeSecond)*time.Second),
+			pkg.WithDebug(tmp.Debug.Enable, tmp.Debug.Dir, time.Duration(tmp.Debug.SaveTimeSecond)*time.Second),
 		)
 		go service.Run()
 	}
 
-	if j.Playback.Addr != "" {
-		service := pkg.NewService(j.Playback.Addr, j.Logger,
-			pkg.WithURL(j.Playback.OnJoinURL, j.Playback.OnLeaveURL),
+	if tmp := j.Playback; tmp.Addr != "" {
+		service := pkg.NewService(tmp.Addr, j.Logger,
+			pkg.WithURL(tmp.OnJoinURL, tmp.OnLeaveURL),
 			pkg.WithPubFunc(func(ctx context.Context, pack *jt1078.Packet) (publisher *m7s.Publisher, err error) {
 				streamPath := strings.Join([]string{
-					j.Playback.Prefix,
+					tmp.Prefix,
 					pack.Sim,
 					fmt.Sprintf("%d", pack.LogicChannel),
 				}, "-")
@@ -133,6 +141,7 @@ func (j *JT1078Plugin) Start() (err error) {
 				return time.Duration(pack.Timestamp) // 录像回放使用设备的
 			}),
 			pkg.WithOverTime(time.Duration(j.Playback.OverTimeSecond)*time.Second),
+			pkg.WithDebug(tmp.Debug.Enable, tmp.Debug.Dir, time.Duration(tmp.Debug.SaveTimeSecond)*time.Second),
 		)
 		go service.Run()
 	}

@@ -6,6 +6,9 @@ import (
 	"log/slog"
 	"m7s.live/v5"
 	"net"
+	"os"
+	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -52,9 +55,7 @@ func (s *Service) Run() {
 			return
 		}
 		client := newConnection(conn, s.Logger, s.opts.timestampFunc)
-		var (
-			httpBody = map[string]any{}
-		)
+		httpBody := map[string]any{}
 		ctx, cancel := context.WithCancel(context.Background())
 		client.onJoinEvent = func(c *connection, pack *jt1078.Packet) error {
 			publisher, err := s.opts.pubFunc(ctx, pack)
@@ -68,9 +69,26 @@ func (s *Service) Run() {
 				"channel":    pack.LogicChannel,
 				"startTime":  time.Now().Format(time.DateTime),
 			}
+
+			if debug := s.opts.Debug; debug.enable {
+				_ = os.MkdirAll(debug.dir, 0o755)
+				name := filepath.Join(debug.dir, strings.ReplaceAll(c.publisher.StreamPath, string(os.PathSeparator), "-")+"-debug.txt")
+				if file, err := os.OpenFile(name, os.O_CREATE|os.O_RDWR|os.O_TRUNC|os.O_APPEND, 0o666); err == nil {
+					client.debug.file = file
+					client.debug.closeTime = time.Now().Add(debug.time)
+					httpBody["debugFile"] = name
+					httpBody["debugRecordTime"] = debug.time.Seconds()
+				} else {
+					slog.Warn("open debug file fail",
+						slog.String("name", name),
+						slog.String("err", err.Error()))
+				}
+			}
+
 			onNoticeEvent(s.opts.onJoinURL, httpBody)
 			return nil
 		}
+
 		client.onLeaveEvent = func() {
 			if len(httpBody) > 0 {
 				httpBody["endTime"] = time.Now().Format(time.DateTime)

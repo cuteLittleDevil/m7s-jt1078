@@ -20,6 +20,11 @@ type Options struct {
 	onLeaveURL     string
 	onAudioJoinURL string
 	overTime       time.Duration
+	Debug          struct {
+		enable bool
+		dir    string
+		time   time.Duration
+	}
 }
 
 func WithPubFunc(pubFunc func(ctx context.Context,
@@ -57,5 +62,13 @@ func WithEnableIntercom(enable bool) Option {
 func WithSessions(sessions *AudioManager) Option {
 	return Option{F: func(o *Options) {
 		o.sessions = sessions
+	}}
+}
+
+func WithDebug(enable bool, dir string, time time.Duration) Option {
+	return Option{F: func(o *Options) {
+		o.Debug.enable = enable
+		o.Debug.dir = dir
+		o.Debug.time = time
 	}}
 }

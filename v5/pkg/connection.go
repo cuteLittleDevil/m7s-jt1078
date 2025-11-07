@@ -13,6 +13,7 @@ import (
 	"m7s.live/v5/pkg/task"
 	"m7s.live/v5/pkg/util"
 	"net"
+	"os"
 	"sync"
 	"time"
 )
@@ -30,6 +31,10 @@ type connection struct {
 	videoWriterOnce sync.Once
 	audioWriter     *m7s.PublishAudioWriter[*format.Mpeg2Audio]
 	videoWriter     *m7s.PublishVideoWriter[*format.AnnexB]
+	debug           struct {
+		file      *os.File
+		closeTime time.Time
+	}
 }
 
 func newConnection(c net.Conn, log *slog.Logger, timestampFunc func(pack *jt1078.Packet) time.Duration) *connection {
@@ -56,6 +61,9 @@ func (c *connection) run(ctx context.Context, waitSubscriberOverTime time.Durati
 		ticker.Stop()
 		clear(data)
 		c.stop()
+		if c.debug.file != nil {
+			_ = c.debug.file.Close()
+		}
 	}()
 
 	for {
@@ -103,6 +111,16 @@ func (c *connection) run(ctx context.Context, waitSubscriberOverTime time.Durati
 				if handleErr != nil {
 					return handleErr
 				}
+				if c.debug.file != nil {
+					if _, err := c.debug.file.WriteString(fmt.Sprintf("%x", data[:n])); err != nil {
+						c.Warn("write debug file",
+							slog.String("err", err.Error()))
+					}
+					if time.Since(c.debug.closeTime) > 0 {
+						_ = c.debug.file.Close()
+						c.debug.file = nil
+					}
+				}
 			}
 		}
 	}
@@ -117,6 +135,12 @@ func (c *connection) stop() {
 		c.onLeaveEvent()
 		if c.publisher != nil {
 			c.publisher.Stop(task.ErrTaskComplete)
+		}
+		if c.audioWriter != nil {
+			c.audioWriter.Stop(task.ErrTaskComplete)
+		}
+		if c.videoWriter != nil {
+			c.videoWriter.Stop(task.ErrTaskComplete)
 		}
 	})
 }
