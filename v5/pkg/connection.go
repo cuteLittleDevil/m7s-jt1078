@@ -5,13 +5,13 @@ import (
 	"errors"
 	"fmt"
 	"github.com/cuteLittleDevil/go-jt808/protocol/jt1078"
+	"github.com/langhuihui/gomem"
+	task "github.com/langhuihui/gotask"
 	"io"
 	"log/slog"
 	"m7s.live/v5"
 	"m7s.live/v5/pkg/codec"
 	"m7s.live/v5/pkg/format"
-	"m7s.live/v5/pkg/task"
-	"m7s.live/v5/pkg/util"
 	"net"
 	"os"
 	"sync"
@@ -151,7 +151,7 @@ func (c *connection) handle(packet *jt1078.Packet) error {
 	switch pt := packet.Flag.PT; pt {
 	case jt1078.PTAAC, jt1078.PTG711A, jt1078.PTG711U:
 		c.audioWriterOnce.Do(func() {
-			allocator := util.NewScalableMemoryAllocator(1 << util.MinPowerOf2)
+			allocator := gomem.NewScalableMemoryAllocator(1 << gomem.MinPowerOf2)
 			c.audioWriter = m7s.NewPublishAudioWriter[*format.Mpeg2Audio](c.publisher, allocator)
 		})
 		writer := c.audioWriter
@@ -169,7 +169,7 @@ func (c *connection) handle(packet *jt1078.Packet) error {
 
 	case jt1078.PTH264, jt1078.PTH265:
 		c.videoWriterOnce.Do(func() {
-			allocator := util.NewScalableMemoryAllocator(1 << util.MinPowerOf2)
+			allocator := gomem.NewScalableMemoryAllocator(1 << gomem.MinPowerOf2)
 			c.videoWriter = m7s.NewPublishVideoWriter[*format.AnnexB](c.publisher, allocator)
 		})
 		writer := c.videoWriter
