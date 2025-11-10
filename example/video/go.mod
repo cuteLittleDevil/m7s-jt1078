@@ -6,7 +6,7 @@ require (
 	github.com/cuteLittleDevil/go-jt808/protocol v1.16.0
 	github.com/cuteLittleDevil/go-jt808/service v1.11.4
 	github.com/cuteLittleDevil/go-jt808/shared v1.6.0
-	github.com/cuteLittleDevil/m7s-jt1078/v5 v5.11.1
+	github.com/cuteLittleDevil/m7s-jt1078/v5 v5.11.2
 	github.com/gin-gonic/gin v1.10.0
 	m7s.live/v5 v5.1.3
 )

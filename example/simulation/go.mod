@@ -3,7 +3,7 @@ module simulation
 go 1.24.0
 
 require (
-	github.com/cuteLittleDevil/m7s-jt1078/v5 v5.11.1
+	github.com/cuteLittleDevil/m7s-jt1078/v5 v5.11.2
 	m7s.live/v5 v5.1.3
 )
 

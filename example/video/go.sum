@@ -28,8 +28,8 @@ github.com/cuteLittleDevil/go-jt808/service v1.11.4 h1:GKlO2zjxe+IyJpvzYXkbarbbx
 github.com/cuteLittleDevil/go-jt808/service v1.11.4/go.mod h1:vsCOSwXcobE//5VcBf3Khw5VL0uMaMrWEJCCB9zZWoI=
 github.com/cuteLittleDevil/go-jt808/shared v1.6.0 h1:aJ6a8f3AVS47p5Nja7+/kLRqhnRcv+j/7Jmd+SpnkQ4=
 github.com/cuteLittleDevil/go-jt808/shared v1.6.0/go.mod h1:BMWFmkDRLNjcXcuiPm/yphfWfZ6xNuTAJDkDDNhysOM=
-github.com/cuteLittleDevil/m7s-jt1078/v5 v5.11.1 h1:Aj86Ble+Y4dUVF6iWIqy7jQaxh7DQWKNWhQG5fibZDg=
-github.com/cuteLittleDevil/m7s-jt1078/v5 v5.11.1/go.mod h1:8E6Oh88iEsEkCzaq1xsLm/3ujG0pDsKnbDvGJmO7luo=
+github.com/cuteLittleDevil/m7s-jt1078/v5 v5.11.2 h1:d0USkXXVlzEKVH8C0kZlZnJtFAQDK2MVsF3s2grqytU=
+github.com/cuteLittleDevil/m7s-jt1078/v5 v5.11.2/go.mod h1:8E6Oh88iEsEkCzaq1xsLm/3ujG0pDsKnbDvGJmO7luo=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc h1:U9qPSI2PIWSS1VwoXQT9A3Wy9MM3WgvqSxFWenqJduM=

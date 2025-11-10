@@ -3,7 +3,7 @@ module jt1078
 go 1.25.0
 
 require (
-	github.com/cuteLittleDevil/m7s-jt1078/v5 v5.11.1
+	github.com/cuteLittleDevil/m7s-jt1078/v5 v5.11.2
 	github.com/ncruces/go-sqlite3 v0.29.0
 	m7s.live/v5 v5.1.3
 )
