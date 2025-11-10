@@ -32,8 +32,11 @@ type connection struct {
 	audioWriter     *m7s.PublishAudioWriter[*format.Mpeg2Audio]
 	videoWriter     *m7s.PublishVideoWriter[*format.AnnexB]
 	debug           struct {
-		file      *os.File
-		closeTime time.Time
+		hasRecord           bool
+		file                *os.File
+		closeTime           time.Time
+		hasTemporaryStorage bool
+		temporaryStorage    []byte
 	}
 }
 
@@ -61,7 +64,7 @@ func (c *connection) run(ctx context.Context, waitSubscriberOverTime time.Durati
 		ticker.Stop()
 		clear(data)
 		c.stop()
-		if c.debug.file != nil {
+		if c.debug.hasRecord {
 			_ = c.debug.file.Close()
 		}
 	}()
@@ -89,6 +92,9 @@ func (c *connection) run(ctx context.Context, waitSubscriberOverTime time.Durati
 				}
 				return err
 			} else if n > 0 {
+				if c.debug.hasTemporaryStorage {
+					c.debug.temporaryStorage = append(c.debug.temporaryStorage, data[:n]...)
+				}
 				for pack, err := range packParse.parse(data[:n]) {
 					if err == nil {
 						once.Do(func() {
@@ -111,18 +117,28 @@ func (c *connection) run(ctx context.Context, waitSubscriberOverTime time.Durati
 				if handleErr != nil {
 					return handleErr
 				}
-				if c.debug.file != nil {
-					if _, err := c.debug.file.WriteString(fmt.Sprintf("%x", data[:n])); err != nil {
-						c.Warn("write debug file",
-							slog.String("err", err.Error()))
-					}
-					if time.Since(c.debug.closeTime) > 0 {
-						_ = c.debug.file.Close()
-						c.debug.file = nil
+				if c.debug.hasRecord {
+					if c.debug.hasTemporaryStorage {
+						c.debug.hasTemporaryStorage = false
+						c.saveDebugFile(c.debug.temporaryStorage)
+					} else {
+						c.saveDebugFile(data[:n])
 					}
 				}
 			}
 		}
+	}
+}
+
+func (c *connection) saveDebugFile(data []byte) {
+	if _, err := c.debug.file.WriteString(fmt.Sprintf("%x", data)); err != nil {
+		c.Warn("write debug file",
+			slog.String("err", err.Error()))
+	}
+	_ = c.debug.file.Sync()
+	if time.Since(c.debug.closeTime) > 0 {
+		_ = c.debug.file.Close()
+		c.debug.hasRecord = false
 	}
 }
 

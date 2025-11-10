@@ -55,6 +55,10 @@ func (s *Service) Run() {
 			return
 		}
 		client := newConnection(conn, s.Logger, s.opts.timestampFunc)
+		if debug := s.opts.Debug; debug.enable {
+			client.debug.hasTemporaryStorage = true
+			client.debug.temporaryStorage = make([]byte, 0, 10*1024)
+		}
 		httpBody := map[string]any{}
 		ctx, cancel := context.WithCancel(context.Background())
 		client.onJoinEvent = func(c *connection, pack *jt1078.Packet) error {
@@ -69,11 +73,11 @@ func (s *Service) Run() {
 				"channel":    pack.LogicChannel,
 				"startTime":  time.Now().Format(time.DateTime),
 			}
-
 			if debug := s.opts.Debug; debug.enable {
 				_ = os.MkdirAll(debug.dir, 0o755)
-				name := filepath.Join(debug.dir, strings.ReplaceAll(c.publisher.StreamPath, string(os.PathSeparator), "-")+"-debug.txt")
-				if file, err := os.OpenFile(name, os.O_CREATE|os.O_RDWR|os.O_TRUNC|os.O_APPEND, 0o666); err == nil {
+				name := filepath.Join(debug.dir, strings.ReplaceAll(c.publisher.StreamPath, string(os.PathSeparator), "-"))
+				if file, fileErr := os.OpenFile(name+"-debug.txt", os.O_CREATE|os.O_RDWR|os.O_TRUNC|os.O_APPEND, 0o666); fileErr == nil {
+					client.debug.hasRecord = true
 					client.debug.file = file
 					client.debug.closeTime = time.Now().Add(debug.time)
 					httpBody["debugFile"] = name
@@ -84,7 +88,6 @@ func (s *Service) Run() {
 						slog.String("err", err.Error()))
 				}
 			}
-
 			onNoticeEvent(s.opts.onJoinURL, httpBody)
 			return nil
 		}
