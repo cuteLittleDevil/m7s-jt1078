@@ -1,7 +1,6 @@
 ![MIT License](https://img.shields.io/github/license/cuteLittleDevil/m7s-jt1078)
 [![Go Report Card](https://goreportcard.com/badge/github.com/cuteLittleDevil/m7s-jt1078/v5)](https://goreportcard.com/report/github.com/cuteLittleDevil/m7s-jt1078/v5)
 ![Latest Release](https://img.shields.io/github/v/release/cuteLittleDevil/m7s-jt1078)
-![Release](https://github.com/cuteLittleDevil/m7s-jt1078/actions/workflows/ubuntu.yml/badge.svg)
 [![Docker Image Size](https://img.shields.io/docker/image-size/cdcddcdc/m7s-jt1078/latest)](https://hub.docker.com/r/cdcddcdc/m7s-jt1078)
 
 <h1 id="m7s"> m7s-jt1078 </h1>
@@ -16,7 +15,7 @@
 
 | 例子 |  测试页面  | 代码 |
 |----------|-----|-------------------|
-| 音视频 | http://124.221.30.46:11000 | [详情点击](./example/video) |
+| 音视频 | http://124.221.30.46:11000 默认测试用视频h264 | [详情点击](./example/video) |
 | 对讲 | https://go-jt808.online:12000 | [详情点击](./example/intercom)  |
 | 模拟流 | 视频 http://124.221.30.46:8088/preview/live/jt1078-295696659617-1?type=mp4 <br/> 音视频 http://124.221.30.46:8088/preview/live/jt1079-156987000796-1| [详情点击](./example/simulation)  |
 
@@ -218,7 +217,7 @@ jt1078:
     jt1078webrtc:
       port: 12020 # 外网UDP端口 用于浏览器webrtc把音频数据推到这个端口
       ip: 124.221.30.46 # 外网ip 用于SDP协商修改
-    audio_ports: [12021, 12050] # 音频端口 [min,max]
+    audio_ports: [12021, 12050] # 音频端口 [min,max] 因为支持广播 就多开一点
     on_join_url: "https://127.0.0.1:12000/api/v1/jt808/event/join-audio" # 设备连接到音频端口的回调
     on_leave_url: "https://127.0.0.1:12000/api/v1/jt808/event/leave-audio" # 设备断开了音频端口的回调
     overtime_second: 60 # 多久没有下发对讲语音的数据 就关闭这个链接
@@ -228,7 +227,8 @@ jt1078:
     on_join_url: "https://127.0.0.1:12000/api/v1/jt808/event/real-time-join" # 设备连接到了实时视频指定端口的回调
     on_leave_url: "https://127.0.0.1:12000/api/v1/jt808/event/real-time-leave" # 设备断开了实时视频指定端口的回调
     prefix: "live/jt1078" # 默认自定义前缀-手机号-通道 如：live/jt1078-295696659617-1
-    overtime_second: 0 # 无人订阅的情况 多久就关闭这个链接（小于等于0则不启用 默认0 推荐还是使用9102指令去触发关闭)
+    # 无人订阅的情况(需要曾经订阅过) 多久就关闭这个链接（小于等于0则不启用 默认0 推荐还是使用9102指令去触发关闭)
+    overtime_second: 0
     debug: # 如果有流 就保存一段时间的流文件 文件名为流名称-debug.txt 如live-jt1078-295696659617-1-debug.txt
       enable: false # 是否启用调式日志 默认不调试
       dir: "./save/"
@@ -239,7 +239,8 @@ jt1078:
     on_join_url: "https://127.0.0.1:12000/api/v1/play-back-join" # 设备连接到了回放视频指定端口的回调
     on_leave_url: "https://127.0.0.1:12000/api/v1/play-back-leave" # 设备断开了回放视频指定端口的回调
     prefix: "live/jt1079" # 默认自定义前缀-手机号-通道 如：live/jt1079-295696659617-1
-    overtime_second: 0 # 无人订阅的情况 多久就关闭这个链接（小于等于0则不启用 默认0 推荐还是使用9102指令去触发关闭)
+    # 无人订阅的情况(需要曾经订阅过) 多久就关闭这个链接（小于等于0则不启用 默认0 推荐还是使用9102指令去触发关闭)
+    overtime_second: 0
     debug: # 如果有流 就保存一段时间的流文件 文件名为流名称-debug.txt 如live-jt1079-295696659617-1-debug.txt
       enable: false # 是否启用调式日志 默认不调试
       dir: "./save/"
