@@ -189,17 +189,13 @@ func (c *connection) handle(packet *jt1078.Packet) error {
 			c.videoWriter = m7s.NewPublishVideoWriter[*format.AnnexB](c.publisher, allocator)
 		})
 		writer := c.videoWriter
-		// 为每帧创建 H26xFrame
 		frame := writer.VideoFrame
-		// 设置正确间隔的时间戳
 		frame.Timestamp = c.timestampFunc(packet)
-		// 写入 NALU 数据
-		nalus := frame.GetNalus()
-		// 假如 frameData 中只有一个 NALU，否则需要循环执行下面的代码
-		p := nalus.GetNextPointer()
+		// Push raw AnnexB data — do NOT use GetNalus()/PushOne() as that sets
+		// HasRaw()=true and skips Demux(), which is needed to split NALUs and
+		// detect SPS/PPS/IDR for GOP tracking.
 		mem := frame.NextN(len(data))
 		copy(mem, data)
-		p.PushOne(mem)
 		return writer.NextVideo()
 
 	default:

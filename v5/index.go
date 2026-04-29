@@ -117,9 +117,7 @@ func (j *JT1078Plugin) Start() (err error) {
 			}),
 			pkg.WithEnableIntercom(j.Intercom.Enable),
 			pkg.WithSessions(j.sessions),
-			pkg.WithTimestampFunc(func(_ *jt1078.Packet) time.Duration {
-				return time.Duration(time.Now().UnixMilli()) // 实时视频使用本机时间戳
-			}),
+			pkg.WithTimestampFunc(newPacketTimestamp()),
 			pkg.WithOverTime(time.Duration(tmp.OverTimeSecond)*time.Second),
 			pkg.WithDebug(tmp.Debug.Enable, tmp.Debug.Dir, time.Duration(tmp.Debug.SaveTimeSecond)*time.Second),
 		)
@@ -137,9 +135,7 @@ func (j *JT1078Plugin) Start() (err error) {
 				}, "-")
 				return j.Publish(ctx, streamPath) // 回放唯一
 			}),
-			pkg.WithTimestampFunc(func(pack *jt1078.Packet) time.Duration {
-				return time.Duration(pack.Timestamp) // 录像回放使用设备的
-			}),
+			pkg.WithTimestampFunc(newPacketTimestamp()),
 			pkg.WithOverTime(time.Duration(j.Playback.OverTimeSecond)*time.Second),
 			pkg.WithDebug(tmp.Debug.Enable, tmp.Debug.Dir, time.Duration(tmp.Debug.SaveTimeSecond)*time.Second),
 		)
