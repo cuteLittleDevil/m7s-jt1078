@@ -85,7 +85,7 @@ func (s *Service) Run() {
 				} else {
 					slog.Warn("open debug file fail",
 						slog.String("name", name),
-						slog.String("err", err.Error()))
+						slog.Any("err", fileErr))
 				}
 			}
 			onNoticeEvent(s.opts.onJoinURL, httpBody)
