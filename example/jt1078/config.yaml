@@ -57,3 +57,8 @@ jt1078:
 
 mp4:
   enable: true
+
+rtsp:
+  enable: true
+  tcp:
+    listen_addr: ":8554"

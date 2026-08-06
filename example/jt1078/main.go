@@ -9,6 +9,7 @@ import (
 	_ "m7s.live/v5/plugin/flv"
 	_ "m7s.live/v5/plugin/mp4"
 	_ "m7s.live/v5/plugin/preview"
+	_ "m7s.live/v5/plugin/rtsp"
 	_ "m7s.live/v5/plugin/webrtc"
 )
 
