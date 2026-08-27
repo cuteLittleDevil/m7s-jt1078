@@ -8,6 +8,7 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"runtime/debug"
 	"strings"
 	"time"
 )
@@ -33,6 +34,22 @@ type Service struct {
 	*slog.Logger
 	addr string
 	opts *Options
+}
+
+func (s *Service) runConnection(ctx context.Context, client *connection, waitSubscriberOverTime time.Duration, httpBody *map[string]any) {
+	defer func() {
+		if panicValue := recover(); panicValue != nil {
+			s.Error("connection panic",
+				slog.Any("http body", *httpBody),
+				slog.Any("panic", panicValue),
+				slog.String("stack", string(debug.Stack())))
+		}
+	}()
+	if err := client.run(ctx, waitSubscriberOverTime); err != nil {
+		s.Warn("run error",
+			slog.Any("http body", *httpBody),
+			slog.String("err", err.Error()))
+	}
 }
 
 func (s *Service) Run() {
@@ -99,12 +116,6 @@ func (s *Service) Run() {
 			}
 			cancel()
 		}
-		go func(ctx context.Context, waitSubscriberOverTime time.Duration) {
-			if err := client.run(ctx, waitSubscriberOverTime); err != nil {
-				s.Warn("run error",
-					slog.Any("http body", httpBody),
-					slog.String("err", err.Error()))
-			}
-		}(ctx, s.opts.overTime)
+		go s.runConnection(ctx, client, s.opts.overTime, &httpBody)
 	}
 }
