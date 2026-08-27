@@ -18,6 +18,14 @@ import (
 	"time"
 )
 
+var (
+	errPublisherUnavailable   = errors.New("publisher unavailable")
+	errAudioWriterUnavailable = errors.New("audio writer unavailable")
+	errAudioFrameUnavailable  = errors.New("audio frame unavailable")
+	errVideoWriterUnavailable = errors.New("video writer unavailable")
+	errVideoFrameUnavailable  = errors.New("video frame unavailable")
+)
+
 type connection struct {
 	conn net.Conn
 	*slog.Logger
@@ -161,16 +169,49 @@ func (c *connection) stop() {
 	})
 }
 
+func (c *connection) getAudioWriter() (*m7s.PublishAudioWriter[*format.Mpeg2Audio], error) {
+	if c.publisher == nil {
+		return nil, errPublisherUnavailable
+	}
+	c.audioWriterOnce.Do(func() {
+		allocator := gomem.NewScalableMemoryAllocator(1 << gomem.MinPowerOf2)
+		c.audioWriter = m7s.NewPublishAudioWriter[*format.Mpeg2Audio](c.publisher, allocator)
+	})
+	if c.audioWriter == nil {
+		return nil, errAudioWriterUnavailable
+	}
+	if c.audioWriter.AudioFrame == nil {
+		return nil, errAudioFrameUnavailable
+	}
+	return c.audioWriter, nil
+}
+
+func (c *connection) getVideoWriter() (*m7s.PublishVideoWriter[*format.AnnexB], error) {
+	if c.publisher == nil {
+		return nil, errPublisherUnavailable
+	}
+	c.videoWriterOnce.Do(func() {
+		allocator := gomem.NewScalableMemoryAllocator(1 << gomem.MinPowerOf2)
+		c.videoWriter = m7s.NewPublishVideoWriter[*format.AnnexB](c.publisher, allocator)
+	})
+	if c.videoWriter == nil {
+		return nil, errVideoWriterUnavailable
+	}
+	if c.videoWriter.VideoFrame == nil {
+		return nil, errVideoFrameUnavailable
+	}
+	return c.videoWriter, nil
+}
+
 func (c *connection) handle(packet *jt1078.Packet) error {
 	data := packet.Body
 
 	switch pt := packet.Flag.PT; pt {
 	case jt1078.PTAAC, jt1078.PTG711A, jt1078.PTG711U:
-		c.audioWriterOnce.Do(func() {
-			allocator := gomem.NewScalableMemoryAllocator(1 << gomem.MinPowerOf2)
-			c.audioWriter = m7s.NewPublishAudioWriter[*format.Mpeg2Audio](c.publisher, allocator)
-		})
-		writer := c.audioWriter
+		writer, err := c.getAudioWriter()
+		if err != nil {
+			return err
+		}
 		frame := writer.AudioFrame
 		frame.ICodecCtx = &codec.AACCtx{}
 		if pt == jt1078.PTG711A {
@@ -184,11 +225,10 @@ func (c *connection) handle(packet *jt1078.Packet) error {
 		return writer.NextAudio()
 
 	case jt1078.PTH264, jt1078.PTH265:
-		c.videoWriterOnce.Do(func() {
-			allocator := gomem.NewScalableMemoryAllocator(1 << gomem.MinPowerOf2)
-			c.videoWriter = m7s.NewPublishVideoWriter[*format.AnnexB](c.publisher, allocator)
-		})
-		writer := c.videoWriter
+		writer, err := c.getVideoWriter()
+		if err != nil {
+			return err
+		}
 		frame := writer.VideoFrame
 		frame.Timestamp = c.timestampFunc(packet)
 		// Push raw AnnexB data — do NOT use GetNalus()/PushOne() as that sets
